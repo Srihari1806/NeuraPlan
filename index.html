@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="NeuraPlan - A premium Notion-like task planner for multi-domain study planning across 6 weeks">
+  <title>NeuraPlan — Smart Study Planner</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="app-container" id="app">
+    <!-- Sidebar -->
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-header">
+        <div class="sidebar-logo">N</div>
+        <div>
+          <div class="sidebar-title">NeuraPlan</div>
+          <div class="sidebar-subtitle">6-Week Sprint Planner</div>
+        </div>
+      </div>
+      <nav class="sidebar-nav" id="sidebarNav">
+        <div class="nav-section">
+          <div class="nav-section-title">Views</div>
+          <div class="nav-item active" data-view="overview" onclick="switchView('overview')">
+            <span class="icon">📊</span> Overview
+          </div>
+          <div class="nav-item" data-view="calendar" onclick="switchView('calendar')">
+            <span class="icon">📅</span> Calendar
+          </div>
+          <div class="nav-item" data-view="domains" onclick="switchView('domains')">
+            <span class="icon">🎯</span> Domains
+          </div>
+          <div class="nav-item" data-view="timeline" onclick="switchView('timeline')">
+            <span class="icon">⏳</span> Timeline
+          </div>
+          <div class="nav-item" data-view="notes" onclick="switchView('notes')">
+            <span class="icon">📝</span> Notes
+          </div>
+        </div>
+        <div class="nav-section">
+          <div class="nav-section-title">Domains</div>
+          <div id="domainNavItems"></div>
+        </div>
+      </nav>
+      <div class="sidebar-footer">
+        <div class="user-info">
+          <div class="user-avatar">S</div>
+          <div>
+            <div class="user-name">Srihari</div>
+            <div class="user-plan">Pro Planner</div>
+          </div>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-content">
+      <div class="top-bar">
+        <button class="toggle-sidebar-btn" onclick="toggleSidebar()" title="Toggle Sidebar">☰</button>
+        <div class="breadcrumb" id="breadcrumb">
+          <span>Overview</span>
+        </div>
+        <div class="top-bar-actions">
+          <button class="top-btn" onclick="openSearch()" title="Search (Ctrl+K)">🔍 Search <span class="search-kbd" style="margin-left:4px">Ctrl K</span></button>
+          <button class="top-btn primary" onclick="openAddTaskModal()">＋ Add Task</button>
+        </div>
+      </div>
+
+      <div class="view-tabs" id="viewTabs">
+        <div class="view-tab active" data-view="overview" onclick="switchView('overview')">Overview</div>
+        <div class="view-tab" data-view="calendar" onclick="switchView('calendar')">Calendar</div>
+        <div class="view-tab" data-view="domains" onclick="switchView('domains')">Domains</div>
+        <div class="view-tab" data-view="timeline" onclick="switchView('timeline')">Timeline</div>
+        <div class="view-tab" data-view="notes" onclick="switchView('notes')">Notes</div>
+      </div>
+
+      <div class="content-area" id="contentArea"></div>
+    </main>
+  </div>
+
+  <!-- Add Task Modal -->
+  <div class="modal-overlay" id="addTaskModal">
+    <div class="modal">
+      <div class="modal-header">
+        <div class="modal-title">✨ New Task</div>
+        <button class="modal-close" onclick="closeAddTaskModal()">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label class="form-label">Task Title</label>
+          <input type="text" class="form-input" id="taskTitleInput" placeholder="e.g. Complete binary search problems...">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Description (optional)</label>
+          <textarea class="form-input" id="taskDescInput" placeholder="Add details about this task..."></textarea>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Domain</label>
+            <select class="form-input" id="taskDomainInput"></select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Priority</label>
+            <select class="form-input" id="taskPriorityInput">
+              <option value="low">🟢 Low</option>
+              <option value="medium" selected>🟡 Medium</option>
+              <option value="high">🔴 High</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Date</label>
+            <input type="date" class="form-input" id="taskDateInput">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Time Slot</label>
+            <select class="form-input" id="taskTimeInput">
+              <option value="">No time set</option>
+              <option value="06:00-08:00">🌅 6 AM - 8 AM</option>
+              <option value="08:00-10:00">☀️ 8 AM - 10 AM</option>
+              <option value="10:00-12:00">🌤️ 10 AM - 12 PM</option>
+              <option value="12:00-14:00">🌞 12 PM - 2 PM</option>
+              <option value="14:00-16:00">🌇 2 PM - 4 PM</option>
+              <option value="16:00-18:00">🌆 4 PM - 6 PM</option>
+              <option value="18:00-20:00">🌙 6 PM - 8 PM</option>
+              <option value="20:00-22:00">🌃 8 PM - 10 PM</option>
+              <option value="22:00-00:00">🌌 10 PM - 12 AM</option>
+            </select>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-ghost" onclick="closeAddTaskModal()">Cancel</button>
+        <button class="btn btn-primary" onclick="addTask()">Add Task</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Search Overlay -->
+  <div class="search-overlay" id="searchOverlay" onclick="closeSearch(event)">
+    <div class="search-box" onclick="event.stopPropagation()">
+      <div class="search-input-wrapper">
+        <span class="icon">🔍</span>
+        <input type="text" class="search-input" id="searchInput" placeholder="Search tasks, notes, domains..." oninput="performSearch(this.value)">
+        <span class="search-kbd">ESC</span>
+      </div>
+      <div class="search-results" id="searchResults">
+        <div class="search-empty">Type to search across all your tasks and notes</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Day Detail Slide Panel -->
+  <div class="day-detail-panel" id="dayDetailPanel">
+    <div class="day-detail-header">
+      <div>
+        <h2 id="dayDetailTitle">Day Tasks</h2>
+        <div class="day-detail-date" id="dayDetailDate"></div>
+      </div>
+      <button class="day-detail-close" onclick="closeDayDetail()">✕</button>
+    </div>
+    <div class="day-detail-body" id="dayDetailBody"></div>
+  </div>
+
+  <!-- Toast Container -->
+  <div class="toast-container" id="toastContainer"></div>
+
+  <script src="app.js"></script>
+</body>
+</html>
