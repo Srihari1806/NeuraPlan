@@ -39,10 +39,10 @@ function init() {
     saveState();
   }
 
-  // Generate 6-week schedule (Version 2 - Fix timezone mismatch)
-  if (state.scheduleVersion !== 2) {
+  // Generate 6-week schedule (Version 3 - Specific Timetable Update)
+  if (state.scheduleVersion !== 3) {
     generateSchedule(TARGET_START);
-    state.scheduleVersion = 2;
+    state.scheduleVersion = 3;
     saveState();
   }
 
@@ -766,12 +766,17 @@ function generateSchedule(startDateStr) {
 
     let dayTasks = [];
 
+    // ALL DAYS: 12-1 Aptitude, 1-4 UPSC, 4-8 Freelancing (belonging to the "night" of this day, so technically next day morning)
+    // We add this block FIRST to the *next day* if we want it to chronologically follow.
+    // However, for proper visualization, user listed it at the end of the day block. 
+    // "12-1" is 00:00 next day.
+
     // Schedule Patterns
     if (dayName === 'Mon') {
       dayTasks.push(
         { t: 'College', d: 'colgsem', time: '09:00-13:00' },
-        { t: 'Discrete Mathematics', d: 'colgsem', time: '14:00-17:00' },
-        { t: 'Discrete Mathematics', d: 'colgsem', time: '17:00-19:00' },
+        { t: 'Clg Sem - Discrete Mathematics', d: 'colgsem', time: '14:00-17:00' },
+        { t: 'Clg Sem - Discrete Mathematics', d: 'colgsem', time: '17:00-19:00' },
         { t: 'AI / ML', d: 'aiml', time: '19:00-20:00' },
         { t: 'CS Core', d: 'cscore', time: '20:00-21:00' },
         { t: 'Full Stack', d: 'fullstack', time: '22:00-23:00' },
@@ -781,8 +786,8 @@ function generateSchedule(startDateStr) {
       dayTasks.push(
         { t: 'College', d: 'colgsem', time: '09:00-17:00' }
       );
-      if (dayName === 'Tue') dayTasks.push({ t: 'Computer Network', d: 'colgsem', time: '17:00-19:00' });
-      if (dayName === 'Thu') dayTasks.push({ t: 'Cloud Computing', d: 'colgsem', time: '17:00-19:00' });
+      if (dayName === 'Tue') dayTasks.push({ t: 'Clg Sem - Computer Network', d: 'colgsem', time: '17:00-19:00' });
+      if (dayName === 'Thu') dayTasks.push({ t: 'Clg Sem - Cloud Computing', d: 'colgsem', time: '17:00-19:00' });
 
       dayTasks.push(
         { t: 'AI / ML', d: 'aiml', time: '19:00-20:00' },
@@ -806,7 +811,7 @@ function generateSchedule(startDateStr) {
       else dayTasks.push({ t: 'SWE', d: 'colgsem', time: '11:00-13:00' }); // Sun
 
       dayTasks.push(
-        { t: 'Creative + Portfolio', d: 'creative', time: '14:00-18:00' },
+        { t: 'Creative + Portfolio Building', d: 'creative', time: '14:00-18:00' },
         { t: 'AI / ML', d: 'aiml', time: '19:00-20:00' },
         { t: 'CS Core', d: 'cscore', time: '20:00-21:00' },
         { t: 'Full Stack', d: 'fullstack', time: '22:00-23:00' },
@@ -820,12 +825,11 @@ function generateSchedule(startDateStr) {
     });
 
     // Add Night Routine (00:00 - 08:00) assigned to the NEXT day morning
-    // 12-1 Aptitude, 1-4 UPSC, 4-8 Freelancing
     const nextDate = new Date(current);
     nextDate.setDate(current.getDate() + 1);
     const nextDateStr = dateKey(nextDate);
 
-    // Check if within bounds? We can add them even if slightly outside the 6 weeks visually (it's the next morning)
+    // 12-1 Aptitude, 1-4 UPSC, 4-8 Freelancing
     const nightTasks = [
       { t: 'Aptitude', d: 'aptitude', time: '00:00-01:00' },
       { t: 'UPSC', d: 'upsc', time: '01:00-04:00' },
