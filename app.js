@@ -39,10 +39,10 @@ function init() {
     saveState();
   }
 
-  // Generate 6-week schedule if not already done
-  if (state.scheduleVersion !== 1) {
+  // Generate 6-week schedule (Version 2 - Fix timezone mismatch)
+  if (state.scheduleVersion !== 2) {
     generateSchedule(TARGET_START);
-    state.scheduleVersion = 1;
+    state.scheduleVersion = 2;
     saveState();
   }
 
@@ -141,7 +141,8 @@ function populateDomainSelect() {
 
 // ===== DATE HELPERS =====
 function getWeekDates(weekOffset) {
-  const start = new Date(state.startDate);
+  // Use T00:00:00 to ensure Local Time parsing
+  const start = new Date(state.startDate + 'T00:00:00');
   start.setDate(start.getDate() + weekOffset * 7);
   const dates = [];
   for (let i = 0; i < 7; i++) {
@@ -157,7 +158,11 @@ function formatDate(date) {
 }
 
 function dateKey(date) {
-  return date.toISOString().split('T')[0];
+  // Return YYYY-MM-DD in Local Time to avoid timezone shifts
+  const y = date.getFullYear();
+  const m = String(date.getMonth() + 1).padStart(2, '0');
+  const d = String(date.getDate()).padStart(2, '0');
+  return `${y}-${m}-${d}`;
 }
 
 function isToday(date) {
@@ -748,14 +753,15 @@ document.addEventListener('DOMContentLoaded', init);
 // ===== SCHEDULE GENERATOR =====
 function generateSchedule(startDateStr) {
   state.tasks = []; // Clear existing tasks
+
+  // Use 6 weeks = 42 days
   const start = new Date(startDateStr + 'T00:00:00');
 
-  // 6 weeks = 42 days
   for (let i = 0; i < 42; i++) {
     const current = new Date(start);
     current.setDate(start.getDate() + i);
     const dayIndex = current.getDay(); // 0=Sun, 1=Mon ...
-    const dateStr = dateKey(current);
+    const dateStr = dateKey(current); // Uses new local dateKey
     const dayName = DAYS[dayIndex];
 
     let dayTasks = [];
