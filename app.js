@@ -39,6 +39,13 @@ function init() {
     saveState();
   }
 
+  // Generate 6-week schedule if not already done
+  if (state.scheduleVersion !== 1) {
+    generateSchedule(TARGET_START);
+    state.scheduleVersion = 1;
+    saveState();
+  }
+
   if (state.notes.length === 0) {
     state.notes.push({
       id: generateId(),
@@ -737,3 +744,110 @@ function showToast(msg, type = 'info') {
 
 // ===== INIT =====
 document.addEventListener('DOMContentLoaded', init);
+
+// ===== SCHEDULE GENERATOR =====
+function generateSchedule(startDateStr) {
+  state.tasks = []; // Clear existing tasks
+  const start = new Date(startDateStr + 'T00:00:00');
+
+  // 6 weeks = 42 days
+  for (let i = 0; i < 42; i++) {
+    const current = new Date(start);
+    current.setDate(start.getDate() + i);
+    const dayIndex = current.getDay(); // 0=Sun, 1=Mon ...
+    const dateStr = dateKey(current);
+    const dayName = DAYS[dayIndex];
+
+    let dayTasks = [];
+
+    // Schedule Patterns
+    if (dayName === 'Mon') {
+      dayTasks.push(
+        { t: 'College', d: 'colgsem', time: '09:00-13:00' },
+        { t: 'Discrete Mathematics', d: 'colgsem', time: '14:00-17:00' },
+        { t: 'Discrete Mathematics', d: 'colgsem', time: '17:00-19:00' },
+        { t: 'AI / ML', d: 'aiml', time: '19:00-20:00' },
+        { t: 'CS Core', d: 'cscore', time: '20:00-21:00' },
+        { t: 'Full Stack', d: 'fullstack', time: '22:00-23:00' },
+        { t: 'DSA', d: 'dsa', time: '23:00-00:00' }
+      );
+    } else if (dayName === 'Tue' || dayName === 'Thu') {
+      dayTasks.push(
+        { t: 'College', d: 'colgsem', time: '09:00-17:00' }
+      );
+      if (dayName === 'Tue') dayTasks.push({ t: 'Computer Network', d: 'colgsem', time: '17:00-19:00' });
+      if (dayName === 'Thu') dayTasks.push({ t: 'Cloud Computing', d: 'colgsem', time: '17:00-19:00' });
+
+      dayTasks.push(
+        { t: 'AI / ML', d: 'aiml', time: '19:00-20:00' },
+        { t: 'CS Core', d: 'cscore', time: '20:00-21:00' },
+        { t: 'Full Stack', d: 'fullstack', time: '22:00-23:00' },
+        { t: 'DSA', d: 'dsa', time: '23:00-00:00' }
+      );
+    } else if (dayName === 'Wed' || dayName === 'Fri') {
+      dayTasks.push(
+        { t: 'College', d: 'colgsem', time: '09:00-19:00' },
+        { t: 'AI / ML', d: 'aiml', time: '19:00-20:00' },
+        { t: 'CS Core', d: 'cscore', time: '20:00-21:00' },
+        { t: 'Full Stack', d: 'fullstack', time: '22:00-23:00' },
+        { t: 'DSA', d: 'dsa', time: '23:00-00:00' }
+      );
+    } else { // Sat, Sun
+      dayTasks.push(
+        { t: 'Coding / Minor Project', d: 'coding', time: '09:00-11:00' }
+      );
+      if (dayName === 'Sat') dayTasks.push({ t: 'VLSI', d: 'colgsem', time: '11:00-13:00' });
+      else dayTasks.push({ t: 'SWE', d: 'colgsem', time: '11:00-13:00' }); // Sun
+
+      dayTasks.push(
+        { t: 'Creative + Portfolio', d: 'creative', time: '14:00-18:00' },
+        { t: 'AI / ML', d: 'aiml', time: '19:00-20:00' },
+        { t: 'CS Core', d: 'cscore', time: '20:00-21:00' },
+        { t: 'Full Stack', d: 'fullstack', time: '22:00-23:00' },
+        { t: 'DSA', d: 'dsa', time: '23:00-00:00' }
+      );
+    }
+
+    // Add main day tasks
+    dayTasks.forEach(item => {
+      addTaskInternal(item.t, item.d, dateStr, item.time);
+    });
+
+    // Add Night Routine (00:00 - 08:00) assigned to the NEXT day morning
+    // 12-1 Aptitude, 1-4 UPSC, 4-8 Freelancing
+    const nextDate = new Date(current);
+    nextDate.setDate(current.getDate() + 1);
+    const nextDateStr = dateKey(nextDate);
+
+    // Check if within bounds? We can add them even if slightly outside the 6 weeks visually (it's the next morning)
+    const nightTasks = [
+      { t: 'Aptitude', d: 'aptitude', time: '00:00-01:00' },
+      { t: 'UPSC', d: 'upsc', time: '01:00-04:00' },
+      { t: 'Freelancing', d: 'freelance', time: '04:00-08:00' }
+    ];
+
+    nightTasks.forEach(item => {
+      addTaskInternal(item.t, item.d, nextDateStr, item.time);
+    });
+  }
+
+  // Also add night routine for the starting Monday morning (Feb 16) 
+  // currently we are adding night routine to NEXT day. So Feb 16 morning is empty.
+  // The user prompt lists "Mon ... 12-1". Usually implies Mon night/Tue morning.
+  // So standard logic holds. Feb 16 will start at 9am.
+
+  showToast('Scale up! 6-week schedule generated', 'success');
+}
+
+function addTaskInternal(title, domain, date, timeSlot) {
+  state.tasks.push({
+    id: generateId(),
+    title,
+    domain,
+    priority: 'medium',
+    date,
+    timeSlot,
+    done: false,
+    createdAt: new Date().toISOString()
+  });
+}
